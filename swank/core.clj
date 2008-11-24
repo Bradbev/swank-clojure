@@ -83,9 +83,11 @@
            (throw t))))))
 
 (defn exception-stacktrace [#^Throwable t]
+  ; get the true cause
+  (let [t (loop [t t] (if (. t getCause) (recur (. t getCause)) t))]
   (map #(list %1 %2 '(:restartable nil))
        (iterate inc 0)
-       (map str (.getStackTrace t))))
+       (map str (.getStackTrace t)))))
 
 (def *debug-thread-id*)
 (defn invoke-debugger [#^Throwable thrown id]
