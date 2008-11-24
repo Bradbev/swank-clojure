@@ -12,12 +12,12 @@
 (def *current-package*)
 
 (defn maybe-ns [package]
-    (cond
-     (symbol? package) (or (find-ns package) (maybe-ns 'user))
-     (string? package) (maybe-ns (symbol package))
-     (keyword? package) (maybe-ns (name package))
-     (instance? clojure.lang.Namespace package) package
-     :else (maybe-ns 'user)))
+  (cond
+   (symbol? package) (or (find-ns package) (maybe-ns 'user))
+   (string? package) (maybe-ns (symbol package))
+   (keyword? package) (maybe-ns (name package))
+   (instance? clojure.lang.Namespace package) package
+   :else (maybe-ns 'user)))
 
 (defmacro with-emacs-package [& body]
   `(binding [*ns* (maybe-ns *current-package*)]
@@ -36,8 +36,8 @@
      ~@body))
 
 ;; Exceptions for debugging
-(defexception swank.core.DebugQuitException)
-(def *current-exception*)
+(def *debug-quit-exception* (Exception. "Debug quit"))
+(def #^Throwable *current-exception*)
 
 ;; Handle Evaluation
 (defn send-to-emacs
@@ -69,7 +69,7 @@
                  (exception-causes cause))))
 
 (defn- debug-quit-exception? [t]
-  (some #(instance? swank.core.DebugQuitException %) (exception-causes t)))
+  (some #(identical? *debug-quit-exception* %) (exception-causes t)))
 
 (defn debug-loop
   "A loop that is intented to take over an eval thread when a debug is
@@ -193,7 +193,8 @@
 
          (= action :return)
          (let [[thread & ret] args]
-           (write-to-connection conn `(:return ~@ret)))
+           (binding [*print-level* nil, *print-length* nil]
+             (write-to-connection conn `(:return ~@ret))))
 
          (one-of? action
                   :write-string :presentation-start :presentation-end

@@ -27,9 +27,10 @@
 
 (defn position
   "Finds the first position of item within col. Returns nil if not
-   found."
-  ([item coll]
-     (loop [coll coll, i 0]
+   found. Optionally provide a start offset to search from."
+  ([item coll] (position item coll 0))
+  ([item coll start]
+     (loop [coll (drop start coll), i start]
        (when coll
          (if (= (first coll) item)
            i
@@ -67,13 +68,6 @@
 
 (defmacro continuously [& body]
   `(loop [] ~@body (recur)))
-
-(defmacro defexception [name]
-  `(try
-    (gen-and-load-class (quote ~name) :extends Exception)
-    (catch java.lang.LinkageError le#
-      ;; ignore linkage error, probably just already defined
-      nil)))
 
 (defn read-from-string
   "Reads the next object from a string, throws an exception when form
